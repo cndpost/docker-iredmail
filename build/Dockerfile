@@ -1,11 +1,10 @@
 FROM phusion/baseimage:0.9.21
-LABEL maintainer "John Xuv <cndpost@yahoo.com"
+LABEL maintainer "John Xu <cndpost@yahoo.com"
 
 ENV http_proxy 'http://10.122.49.205:3128'
 ENV https_proxy $http_proxy
 RUN export http_proxy=$http_proxy
 RUN export https_proxy=$https_proxy
-
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -28,10 +27,9 @@ RUN apt-get -q update \
       dovecot-sieve \
       iptables \
       augeas-tools \
+      net-tools \
+      iputils-ping \
     && apt-get clean
-
-RUN apt-get install -y -q net-tools iputils-ping iptables
-
 
 ENV IREDMAIL_VERSION 0.9.6
 ARG HOSTNAME=mail
