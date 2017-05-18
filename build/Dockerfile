@@ -8,6 +8,7 @@ RUN export https_proxy=$https_proxy
 
 
 ENV DEBIAN_FRONTEND noninteractive
+
 RUN echo "APT::Install-Recommends 0;" >> /etc/apt/apt.conf.d/01-no-recommends \
     && echo "APT::Install-Suggests 0;" >> /etc/apt/apt.conf.d/01-no-recommends
 
@@ -28,6 +29,9 @@ RUN apt-get -q update \
       iptables \
       augeas-tools \
     && apt-get clean
+
+RUN apt-get install -y -q net-tools iputils-ping iptables
+
 
 ENV IREDMAIL_VERSION 0.9.6
 ARG HOSTNAME=mail
