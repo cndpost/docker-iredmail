@@ -2,7 +2,7 @@ FROM phusion/baseimage:0.9.21
 LABEL maintainer "John Xuv <cndpost@yahoo.com"
 
 ENV http_proxy 'http://10.122.49.205:3128'
-ENV https_proxy $http_prox
+ENV https_proxy $http_proxy
 RUN export http_proxy=$http_proxy
 RUN export https_proxy=$https_proxy
 
