@@ -1,5 +1,11 @@
 FROM phusion/baseimage:0.9.21
-LABEL maintainer "velaluqa GmbH <info@velalu.qa>"
+LABEL maintainer "John Xuv <cndpost@yahoo.com"
+
+ENV http_proxy 'http://10.122.49.205:3128'
+ENV https_proxy $http_prox
+RUN export http_proxy=$http_proxy
+RUN export https_proxy=$https_proxy
+
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN echo "APT::Install-Recommends 0;" >> /etc/apt/apt.conf.d/01-no-recommends \
@@ -38,7 +44,7 @@ COPY ./hostname /bin/hostname
 
 WORKDIR /opt/iredmail
 
-RUN wget -O - https://bitbucket.org/zhb/iredmail/downloads/iRedMail-"${IREDMAIL_VERSION}".tar.bz2 | \
+RUN wget -e use_proxy=yes -e https_proxy=10.122.49.205:3128 --no-check-certificate -O - https://bitbucket.org/zhb/iredmail/downloads/iRedMail-"${IREDMAIL_VERSION}".tar.bz2 | \
     tar xvj --strip-components=1 \
     && echo "export DOVECOT_USE_SYSLOG='NO'" >> /opt/iredmail/conf/dovecot # Requires rsyslog, but phusion/baseimage uses syslog-ng
 
@@ -79,32 +85,31 @@ RUN bash -c "source iredmail/config \
     && sed -i s\/password\\\\\(\ *\\\\\).*\/password\\\\1=\ \\\"\$MYSQL_ROOT_PASSWD\\\"\/ /etc/mysql/debian.cnf \
     && sed -i s\/user\\\\\(\ *\\\\\).*\/user\\\\1=\ root\/ /etc/mysql/debian.cnf"
 
-RUN mv /opt/iredmail/iRedMail.tips /opt \
-    && rm -rf /opt/iredmail /root/.bash_history \
+RUN mv /opt/iredmail/iRedMail.tips /opt 
+RUN  rm -rf /opt/iredmail /root/.bash_history \
     && mv -f /bin/uname_ /bin/uname \
     && mv -f /bin/hostname_ /bin/hostname
 
 # Disable SSH and SSH fail2ban
-RUN rm -rf /etc/service/sshd /etc/my_init.d/00_regen_ssh_host_keys.sh \
-    && wget -qP /usr/share/augeas/lenses/dist https://raw.githubusercontent.com/vynt-kenshiro/augeas-lenses/master/fail2ban.aug \
-    && echo set /augeas/load/Fail2ban/incl[last\(\)+1] /etc/fail2ban/jail.local > /tmp/augscript \
-    && echo load >> /tmp/augscript \
-    && echo set /files/etc/fail2ban/jail.local/sshd/enabled false >> /tmp/augscript \
-    && echo set /files/etc/fail2ban/jail.local/sshd-ddos/enabled false >> /tmp/augscript \
-    && echo save >> /tmp/augscript \
-    && augtool -L -f /tmp/augscript \
-    && rm /tmp/augscript /usr/share/augeas/lenses/dist/fail2ban.aug
+RUN rm -rf /etc/service/sshd /etc/my_init.d/00_regen_ssh_host_keys.sh 
+    
+RUN    echo load >> /tmp/augscript 
+RUN    echo set /files/etc/fail2ban/jail.local/sshd/enabled false >> /tmp/augscript 
+RUN    echo set /files/etc/fail2ban/jail.local/sshd-ddos/enabled false >> /tmp/augscript 
+RUN    echo save >> /tmp/augscript 
+RUN    augtool -L -f /tmp/augscript 
+# RUN    rm /tmp/augscript /usr/share/augeas/lenses/dist/fail2ban.aug
 
 # Disable backups
-RUN sed -i '/\/var\/vmail\/backup/d' /var/spool/cron/crontabs/root
+# RUN sed -i '/\/var\/vmail\/backup/d' /var/spool/cron/crontabs/root
 
 # Use one DKIM key for all domains
-RUN sed -i s/^dkim_key\(\"$DOMAIN\"/dkim_key\(\"*\"/ /etc/amavis/conf.d/50-user
+ RUN sed -i s/^dkim_key\(\"$DOMAIN\"/dkim_key\(\"*\"/ /etc/amavis/conf.d/50-user
 
 # Amend config files for runsv compatibility
-RUN sed -i '/^Foreground /c Foreground true' /etc/clamav/clamd.conf \
-    && sed -i '/init.d/c pkill -sighup clamd' /etc/logrotate.d/clamav-daemon \
-    && sed -i '/^Foreground /c Foreground true' /etc/clamav/freshclam.conf
+ RUN sed -i '/^Foreground /c Foreground true' /etc/clamav/clamd.conf 
+ RUN     sed -i '/init.d/c pkill -sighup clamd' /etc/logrotate.d/clamav-daemon 
+ RUN     sed -i '/^Foreground /c Foreground true' /etc/clamav/freshclam.conf
 
 # Add syslog-ng configuration for openldap
 RUN echo "destination d_openldap { file(\"/var/log/openldap.log\"); };\n\
